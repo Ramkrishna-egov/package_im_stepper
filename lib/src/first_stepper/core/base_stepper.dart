@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../core/dotted_line.dart';
 import 'base_indicator.dart';
 
 /// Callback is fired when a step is reached.
@@ -10,10 +9,8 @@ class BaseStepper extends StatefulWidget {
   /// Creates a basic stepper.
   BaseStepper({
     Key? key,
-    this.completedSteps,
-    this.stepperAnimateInMiddle,
-    this.stepCompetedColor,
     this.children,
+    this.textChildren,
     this.nextPreviousButtonsDisabled = true,
     this.stepTappingDisabled = true,
     this.previousButtonIcon,
@@ -53,14 +50,10 @@ class BaseStepper extends StatefulWidget {
     );
   }
 
-
-  // completed Map
-  final Map<String,int>? completedSteps;
-  //Animate Selected Stepper in middle
-  final bool? stepperAnimateInMiddle;
-
   /// Each child defines a step. Hence, total number of children determines the total number of steps.
   final List<Widget>? children;
+
+  final List<Widget>? textChildren;
 
   /// Whether to enable or disable the next and previous buttons.
   final bool nextPreviousButtonsDisabled;
@@ -79,9 +72,6 @@ class BaseStepper extends StatefulWidget {
 
   /// Whether to show the steps horizontally or vertically. __Note: Ensure horizontal stepper goes inside a column and vertical goes inside a row.__
   final Axis direction;
-
-  //Completed Step color
-  final Color? stepCompetedColor;
 
   /// The color of the step when it is not reached.
   final Color? stepColor;
@@ -166,9 +156,8 @@ class BaseStepperState extends State<BaseStepper> {
   void _afterLayout(_) {
     // ! Provide detailed explanation.
     for (int i = 0; i < widget.children!.length; i++) {
-      print(widget.stepperAnimateInMiddle );
       _scrollController!.animateTo(
-        widget.stepperAnimateInMiddle == true? (i * ((widget.stepRadius * 2) + widget.lineLength)) - 98 : i * ((widget.stepRadius * 2) + widget.lineLength),
+        i * ((widget.stepRadius * 2) + widget.lineLength),
         duration: widget.stepReachedAnimationDuration,
         curve: widget.stepReachedAnimationEffect,
       );
@@ -236,16 +225,24 @@ class BaseStepperState extends State<BaseStepper> {
       widget.children!.length,
       (index) {
         return widget.direction == Axis.horizontal
-            ? Row(
-                children: <Widget>[
-                  _customizedIndicator(index),
-                  _customizedDottedLine(index, Axis.horizontal),
-                ],
-              )
+            ? Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                Row(
+                  children: <Widget>[
+                    _customizedDottedLine(index, Axis.horizontal, index != 0),
+                    _customizedIndicator(index),
+                    _customizedDottedLine(index, Axis.horizontal,
+                        index != (widget.children!.length - 1)),
+                  ],
+                ),
+                SizedBox(
+                  height: 8.0,
+                ),
+                _customizedTextIndicator(index)
+              ])
             : Column(
                 children: <Widget>[
                   _customizedIndicator(index),
-                  _customizedDottedLine(index, Axis.vertical),
+                  _customizedDottedLine(index, Axis.vertical, false),
                 ],
               );
       },
@@ -255,7 +252,6 @@ class BaseStepperState extends State<BaseStepper> {
   /// A customized IconStep.
   Widget _customizedIndicator(int index) {
     return BaseIndicator(
-      isStepCompleted: widget.completedSteps![index.toString()] == 0 ? false : true,
       isSelected: _selectedIndex == index,
       onPressed: widget.stepTappingDisabled
           ? () {
@@ -278,19 +274,55 @@ class BaseStepperState extends State<BaseStepper> {
       margin: widget.margin,
       activeBorderWidth: widget.activeStepBorderWidth,
       child: widget.children![index],
+      textChild: widget.textChildren![index],
+    );
+  }
+
+  Widget _customizedTextIndicator(int index) {
+    return BaseIndicator(
+      isSelected: _selectedIndex == index,
+      onPressed: widget.stepTappingDisabled
+          ? () {
+              if (widget.steppingEnabled) {
+                setState(() {
+                  _selectedIndex = index;
+
+                  if (widget.onStepReached != null) {
+                    widget.onStepReached!(_selectedIndex);
+                  }
+                });
+              }
+            }
+          : null,
+      color: widget.stepColor,
+      activeColor: widget.activeStepColor,
+      activeBorderColor: widget.activeStepBorderColor,
+      radius: widget.stepRadius,
+      padding: widget.padding,
+      margin: widget.margin,
+      activeBorderWidth: widget.activeStepBorderWidth,
+      isTextWidget: true,
+      textChild: widget.textChildren![index],
     );
   }
 
   /// A customized DottedLine.
-  Widget _customizedDottedLine(int index, Axis axis) {
-    return index < widget.children!.length - 1
-        ? DottedLine(
-            length: widget.lineLength,
-            color: widget.lineColor ?? Colors.blue,
-            dotRadius: widget.lineDotRadius,
-            spacing: 5.0,
-            axis: axis,
-          )
+  Widget _customizedDottedLine(int index, Axis axis, bool isVisible) {
+    return index < widget.children!.length
+        ? RotatedBox(
+            quarterTurns: 1,
+            child: Container(
+              width: !isVisible ? 0.0 : 2.0,
+              height: widget.lineLength,
+              color: Colors.grey.shade400,
+            ))
+        // DottedLine(
+        //         length: widget.lineLength,
+        //         color: widget.lineColor ?? Colors.blue,
+        //         dotRadius: widget.lineDotRadius,
+        //         spacing: 5.0,
+        //         axis: axis,
+        //       )
         : Container();
   }
 

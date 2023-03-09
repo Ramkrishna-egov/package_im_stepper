@@ -6,6 +6,7 @@ class BaseIndicator extends StatelessWidget {
 
   /// The child to be placed within the indicator.
   final Widget? child;
+  final Widget? textChild;
 
   /// Action to be taken when this indictor is pressed.
   final Function? onPressed;
@@ -18,6 +19,7 @@ class BaseIndicator extends StatelessWidget {
 
   /// Border color of this indicator when it is selected.
   final Color? activeBorderColor;
+  final bool isTextWidget;
 
   /// The border width of this indicator when it is selected.
   final activeBorderWidth;
@@ -31,16 +33,11 @@ class BaseIndicator extends StatelessWidget {
   /// The amount of margin around each side of the indicator.
   final double margin;
 
-  /// Color of this indicator when it is completed.
-  final Color? completedColor;
-
-  final bool? isStepCompleted;
-
   BaseIndicator({
-    this.isStepCompleted,
-    this.completedColor,
     this.isSelected = false,
+    this.isTextWidget = false,
     this.child,
+    this.textChild,
     this.onPressed,
     this.color,
     this.activeColor,
@@ -53,33 +50,36 @@ class BaseIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: isSelected ? EdgeInsets.all(margin) : EdgeInsets.zero,
-      decoration: BoxDecoration(
-        border: isSelected
-            ? Border.all(
-                color: activeBorderColor ?? Colors.blue,
-                width: activeBorderWidth,
-              )
-            : null,
-        shape: BoxShape.circle,
-      ),
-      child: InkWell(
-        onTap: onPressed as void Function()?,
-        child: Container(
-          height: radius * 2,
-          width: radius * 2,
-          padding: EdgeInsets.all(padding),
-          decoration: BoxDecoration(
-            color:
-            isSelected ? activeColor ?? Colors.green :(isStepCompleted == true) ? completedColor ?? Colors.green : color ?? Colors.grey,
-            shape: BoxShape.circle,
-          ),
-          child: Center(
-            child: child,
-          ),
-        ),
-      ),
-    );
+    return isTextWidget
+        ? Center(child: textChild)
+        : Container(
+            padding: isSelected ? EdgeInsets.all(margin) : EdgeInsets.zero,
+            decoration: BoxDecoration(
+              border: isSelected
+                  ? Border.all(
+                      color: activeBorderColor ?? Colors.blue,
+                      width: activeBorderWidth,
+                    )
+                  : null,
+              shape: BoxShape.circle,
+            ),
+            child: InkWell(
+              onTap: onPressed as void Function()?,
+              child: Container(
+                height: radius * 2,
+                width: radius * 2,
+                padding: EdgeInsets.all(padding),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? activeColor ?? Colors.green
+                      : color ?? Colors.grey,
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: child,
+                ),
+              ),
+            ),
+          );
   }
 }
